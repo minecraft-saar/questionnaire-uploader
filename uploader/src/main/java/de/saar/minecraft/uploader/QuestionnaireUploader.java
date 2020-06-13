@@ -67,10 +67,10 @@ public class QuestionnaireUploader {
             // Check header
             if ((!header[0].equals("Timestamp"))
                     || (!header[2].equals("Please enter your Prolific ID"))
-                    || (!header[3].equals("Please enter your Minecraft ID"))
+                    || (!header[3].equals("Please enter your Minecraft username"))
             ) {
                 logger.error("Expected format: \"Timestamp\",\"[...]Please consent below\",\"Please enter your Prolific " +
-                        "ID\",\"Please enter your Minecraft ID\",\"Please enter the secret phrase[...],...");
+                        "ID\",\"Please enter your Minecraft username\",\"Please enter the secret phrase[...],...");
                 throw new RuntimeException("Wrong csv format");
             }
             logger.info("header {} - {}", header[0], header[header.length-1]);
