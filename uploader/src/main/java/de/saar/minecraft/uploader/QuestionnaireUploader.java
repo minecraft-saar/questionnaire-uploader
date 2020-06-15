@@ -20,10 +20,12 @@ import de.saar.minecraft.broker.db.Tables;
 import de.saar.minecraft.broker.db.tables.Questionnaires;
 import de.saar.minecraft.broker.db.tables.records.GameLogsRecord;
 import de.saar.minecraft.broker.db.tables.records.GamesRecord;
+import de.saar.minecraft.broker.db.tables.records.QuestionnairesRecord;
 import de.saar.minecraft.shared.TextMessage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jooq.DSLContext;
+import org.jooq.Result;
 import org.jooq.SQLDialect;
 import org.jooq.exception.TooManyRowsException;
 import org.jooq.impl.DSL;
@@ -124,6 +126,15 @@ public class QuestionnaireUploader {
             int gameId = game.getId();
             logger.info("game id {}", gameId);
 
+            // Check if there is already a questionnaire
+            Result<QuestionnairesRecord> records = jooq.selectFrom(Tables.QUESTIONNAIRES)
+                    .where(Tables.QUESTIONNAIRES.GAMEID.equal(gameId))
+                    .fetch();
+            if (records.isNotEmpty()) {
+                logger.warn("There is already a questionnaire for player {}. Skipping", entry.playerName);
+                continue;
+            }
+
             // Add two entries in GAME_LOGS and entry in QUESTIONNAIRE
             for (Question question: entry.questions) {
                 String questionMessage = getMessageString(gameId, question.question);
@@ -149,7 +160,7 @@ public class QuestionnaireUploader {
                 answerRecord.store();
 
                 // Questionnaire
-                var record = jooq.newRecord(Questionnaires.QUESTIONNAIRES);
+                var record = jooq.newRecord(Tables.QUESTIONNAIRES);
                 String answer = question.answer;
                 if (answer.length() > 4999) {
                     answer = answer.substring(0, 4999);
