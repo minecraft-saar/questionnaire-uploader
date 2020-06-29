@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Locale;
 
 import de.saar.minecraft.broker.db.GameLogsDirection;
+import de.saar.minecraft.broker.db.GameStatus;
 import de.saar.minecraft.broker.db.Tables;
-import de.saar.minecraft.broker.db.tables.Questionnaires;
 import de.saar.minecraft.broker.db.tables.records.GameLogsRecord;
 import de.saar.minecraft.broker.db.tables.records.GamesRecord;
 import de.saar.minecraft.broker.db.tables.records.QuestionnairesRecord;
@@ -111,16 +111,25 @@ public class QuestionnaireUploader {
             try {
                 game = jooq.selectFrom(Tables.GAMES)
                         .where(Tables.GAMES.PLAYER_NAME.equal(entry.playerName))
+                        .and(Tables.GAMES.STATUS.equal(GameStatus.Finished))
                         .fetchOne();
             } catch (TooManyRowsException e) {
-                logger.warn("There are several games for player {}", entry.playerName);
+                logger.warn("There are several finished games for player {}", entry.playerName);
                 game = jooq.selectFrom(Tables.GAMES)
                         .where(Tables.GAMES.PLAYER_NAME.equal(entry.playerName))
+                        .and(Tables.GAMES.STATUS.equal(GameStatus.Finished))
                         .fetchAny();
             }
 
             if (game == null) {
-                logger.warn("Player {} is not in database", entry.playerName);
+                game = jooq.selectFrom(Tables.GAMES)
+                        .where(Tables.GAMES.PLAYER_NAME.equal(entry.playerName))
+                        .fetchAny();
+                if (game == null) {
+                    logger.warn("Player {} is not in database", entry.playerName);
+                } else {
+                    logger.warn("Player {} has only unfinished games", entry.playerName);
+                }
                 continue;
             }
             int gameId = game.getId();
