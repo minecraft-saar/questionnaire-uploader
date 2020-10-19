@@ -10,6 +10,8 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -62,6 +64,7 @@ public class QuestionnaireUploader {
         List<Response> responses = new ArrayList<>();
         try {
             CSVReader reader = new CSVReader(new FileReader(filename));
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd h:m:s a", Locale.US);
             String[] line;
 
             // Get header
@@ -79,11 +82,11 @@ public class QuestionnaireUploader {
             while ((line = reader.readNext()) != null) {
                 List<Question> questions = new ArrayList<>();
 
-                Timestamp timestamp;
+                LocalDateTime timestamp;
                 try {
-                    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd hh:mm:ss a", Locale.US);
-                    Date parsedDate = dateFormat.parse(line[0]);
-                    timestamp = new java.sql.Timestamp(parsedDate.getTime());
+                    // Format: 2020/06/08 3:43:15 PM OEZ -- strip the " OEZ" at the end.
+                    String timeStampString = line[0].substring(0, line[0].length()-4);
+                    timestamp = LocalDateTime.parse(timeStampString, dateTimeFormatter);
                 } catch(Exception e) {  // TODO: less generic
                     logger.error(e.getMessage());
                     throw new RuntimeException(e);
@@ -183,6 +186,23 @@ public class QuestionnaireUploader {
         }
     }
 
+    public void anonymize(DSLContext jooq) {
+        List<String> userNames = jooq.
+                select(Tables.GAMES.PLAYER_NAME).
+                from(Tables.GAMES).
+                groupBy(Tables.GAMES.PLAYER_NAME).
+                fetch(Tables.GAMES.PLAYER_NAME);
+        for (String uname: userNames) {
+            jooq.update(Tables.GAMES)
+                    .set(Tables.GAMES.PLAYER_NAME, "PLAYER_" + (userNames.indexOf(uname) + 1))
+                    .where(Tables.GAMES.PLAYER_NAME.eq(uname))
+                    .execute();
+        }
+        jooq.update(Tables.GAMES)
+                .set(Tables.GAMES.CLIENT_IP, "REDACTED")
+                .execute();
+    }
+
     private String getMessageString(int gameId, String input) {
         TextMessage questionMessage = TextMessage.newBuilder()
                 .setGameId(gameId)
@@ -199,14 +219,12 @@ public class QuestionnaireUploader {
     }
 
     public static class Response {
-        public Timestamp timestamp;
-        public boolean consent;
+        public LocalDateTime timestamp;
         public String prolificId;
         public String playerName;
-        public String secretPhrase;
         public List<Question> questions;
 
-        Response (Timestamp timestamp, String prolificId, String playerName, List<Question> questions) {
+        Response (LocalDateTime timestamp, String prolificId, String playerName, List<Question> questions) {
             this.timestamp = timestamp;
             this.prolificId = prolificId;
             this.playerName = playerName;

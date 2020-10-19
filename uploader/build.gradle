@@ -38,6 +38,6 @@ dependencies {
     implementation group: 'com.google.protobuf', name: 'protobuf-java-util', version: '3.11.0'
     implementation group: 'org.yaml', name: 'snakeyaml', version: '1.25'
 
-    implementation group: 'de.saar.minecraft.infrastructure', name: 'networking', version: '1.1.12'
-    implementation group: 'de.saar.minecraft.infrastructure', name: 'broker', version: '1.1.12'
+    implementation group: 'de.saar.minecraft.infrastructure', name: 'networking', version: '1.2.0'
+    implementation group: 'de.saar.minecraft.infrastructure', name: 'broker', version: '1.2.0'
 }

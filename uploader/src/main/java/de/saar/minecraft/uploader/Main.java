@@ -13,11 +13,22 @@ public class Main {
     private static final Logger logger = LogManager.getLogger(Main.class);
 
     public static void main(String[] args) {
+	boolean anonymize = true;
+	String csvFile;
         if (args.length < 1) {
             logger.error("Missing csv file with arguments {}", (Object) args);
             return;
         }
-        String csvFile = args[0];
+        if (args[0].equals("--no-anonymize")) {
+            anonymize = false;
+            if (args.length < 2) {
+                logger.error("Missing csv file with arguments {}", (Object) args);
+                return;
+            }
+            csvFile = args[1];
+        } else {
+            csvFile = args[0];
+        }
 
         UploaderConfiguration config;
         try {
@@ -31,6 +42,9 @@ public class Main {
         List<QuestionnaireUploader.Response> responses = uploader.readForm(csvFile);
         DSLContext jooq = uploader.setupDatabase();
         uploader.updateForm(jooq, responses);
+        if (anonymize) {
+            uploader.anonymize(jooq);
+        }
 
 
     }
