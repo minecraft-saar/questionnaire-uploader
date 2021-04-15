@@ -64,7 +64,7 @@ public class QuestionnaireUploader {
         List<Response> responses = new ArrayList<>();
         try {
             CSVReader reader = new CSVReader(new FileReader(filename));
-            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd h:m:s a", Locale.US);
+            DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd h:m:s a O", Locale.US);
             String[] line;
 
             // Get header
@@ -85,8 +85,8 @@ public class QuestionnaireUploader {
                 LocalDateTime timestamp;
                 try {
                     // Format: 2020/06/08 3:43:15 PM OEZ -- strip the " OEZ" at the end.
-                    String timeStampString = line[0].substring(0, line[0].length()-4);
-                    timestamp = LocalDateTime.parse(timeStampString, dateTimeFormatter);
+                    // String timeStampString = line[0].substring(0, line[0].length()-4);
+                    timestamp = LocalDateTime.parse(line[0], dateTimeFormatter);
                 } catch(Exception e) {  // TODO: less generic
                     logger.error(e.getMessage());
                     throw new RuntimeException(e);
