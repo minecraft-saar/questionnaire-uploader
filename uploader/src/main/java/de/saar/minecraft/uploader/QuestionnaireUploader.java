@@ -97,7 +97,7 @@ public class QuestionnaireUploader {
 
                 String prolificId = line[2];
                 String playerName = line[3];
-                for (int i = 5; i < line.length; i++) {
+                for (int i: List.of(4,6,7,8,9,10)) {
                     questions.add(new Question(header[i], line[i]));
                     logger.debug("{}: {}", header[i], line[i]);
                 }
