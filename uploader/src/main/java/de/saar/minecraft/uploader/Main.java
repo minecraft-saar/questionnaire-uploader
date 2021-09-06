@@ -45,7 +45,7 @@ public class Main {
         if (anonymize) {
             uploader.anonymize(jooq);
         }
-
-
+        uploader.printPlayersNotInDB();
+        uploader.printProlificIDs();
     }
 }

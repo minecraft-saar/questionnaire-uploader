@@ -37,6 +37,9 @@ public class QuestionnaireUploader {
     private UploaderConfiguration config;
     static private Logger logger = LogManager.getLogger(QuestionnaireUploader.class);
 
+    private List<String> mergedProlificIDs = new ArrayList<>();
+    private List<String> playersNotInDB = new ArrayList<>();
+
     QuestionnaireUploader(UploaderConfiguration config) {
         this.config = config;
     }
@@ -130,13 +133,14 @@ public class QuestionnaireUploader {
                         .fetchAny();
                 if (game == null) {
                     logger.warn("Player {} is not in database", entry.playerName);
+                    playersNotInDB.add(entry.playerName);
                 } else {
                     logger.warn("Player {} has only unfinished games", entry.playerName);
                 }
                 continue;
             }
             int gameId = game.getId();
-            logger.info("game id {}", gameId);
+            logger.debug("game id {}", gameId);
 
             // Check if there is already a questionnaire
             Result<QuestionnairesRecord> records = jooq.selectFrom(Tables.QUESTIONNAIRES)
@@ -146,6 +150,8 @@ public class QuestionnaireUploader {
                 logger.warn("There is already a questionnaire for player {}. Skipping", entry.playerName);
                 continue;
             }
+
+            mergedProlificIDs.add(entry.prolificId);
 
             // Add two entries in GAME_LOGS and entry in QUESTIONNAIRE
             for (Question question: entry.questions) {
@@ -201,6 +207,20 @@ public class QuestionnaireUploader {
         jooq.update(Tables.GAMES)
                 .set(Tables.GAMES.CLIENT_IP, "REDACTED")
                 .execute();
+    }
+    
+    public void printProlificIDs() {
+        System.out.println("prolific IDs successfullly merged:");
+        for (String id: mergedProlificIDs) {
+            System.out.println(id);
+        }
+    }
+    
+    public void printPlayersNotInDB() {
+        System.out.println("player names not found in the game database:");
+        for (String player: playersNotInDB) {
+            System.out.println(player);
+        }
     }
 
     private String getMessageString(int gameId, String input) {
